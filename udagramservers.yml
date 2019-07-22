@@ -39,7 +39,11 @@ Resources:
             Tags:
                 - Key: name
                   Value: !Ref EnvironmentName
-    
+            UserData:
+                Fn::Base64 !Sub |
+                  #!/bin/base -xe
+                  exec > >(tee /var/log/user-data.log|logger -t user-data -s 2>/dev/console) 2>&1
+ 
     InternetGateway:
         Type: AWS::EC2::InternetGateway
         Properties:
@@ -218,8 +222,8 @@ Resources:
                   !Sub "${EnvironmentName}-VPCID"
             SecurityGroupIngress:
             - IpProtocol: tcp
-              FromPort: 8080
-              ToPort: 8080
+              FromPort: 80
+              ToPort: 80
               CidrIp: 0.0.0.0/0
             - IpProtocol: tcp
               FromPort: 22
@@ -243,11 +247,11 @@ Resources:
                        systemctl enable httpd
                        wget -P ../../var/www/html https://udagram.s3-us-west-2.amazonaws.com/index.html
 
-                ImageId: ami-005bdb005fb00e791
+                ImageId: ami-07b4f3c02c7f83d59
                 KeyName: that-one
                 SecurityGroups:
                 - Ref: WebServerSecGroup
-                InstanceType: t2.micro
+                InstanceType: t2.medium
                 BlockDeviceMappings:
                 - DeviceName: "/dev/sdk"
                   Ebs:
@@ -297,12 +301,12 @@ Resources:
             WebAppTargetGroup:
               Type: AWS::ElasticLoadBalancingV2::TargetGroup
               Properties:
-                HealthCheckIntervalSeconds: 10
+                HealthCheckIntervalSeconds: 40
                 HealthCheckPath: /
                 HealthCheckProtocol: HTTP
-                HealthCheckTimeoutSeconds: 8
+                HealthCheckTimeoutSeconds: 30
                 HealthyThresholdCount: 2
-                Port: 8080
+                Port: 80
                 Protocol: HTTP
                 UnhealthyThresholdCount: 5
                 VpcId:
