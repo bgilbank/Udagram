@@ -284,7 +284,7 @@ Resources:
                     TargetGroupArn:
                       Ref: WebAppTargetGroup
                   LoadBalancerArn:
-                    Ref: WebAppLB
+                    Ref: WebAqppLB
                   Port: '80'
                   Protocol: HTP
             ALBListenerRule:
@@ -292,11 +292,11 @@ Resources:
               Properties:
                 Actions:
                 - Type: forward
-                  TargetGroupArn: !Ref 'WebAppTargetGroup'
+                  TargetGroupArn: !Ref WebAppTargetGroup
                 Conditions:
                 - Field: path-pattern
                   Values: [/]
-                ListenerArn: !Ref 'Listener'
+                ListenerArn: Listener
                 Priority: 1
             WebAppTargetGroup:
               Type: AWS::ElasticLoadBalancingV2::TargetGroup
