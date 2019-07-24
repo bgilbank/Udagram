@@ -281,8 +281,7 @@ Resources:
                 Properties:
                   DefaultActions:
                   - Type: forward
-                    TargetGroupArn:
-                      Ref: WebAppTargetGroup
+                    TargetGroupArn: WebAppTargetGroup
                   LoadBalancerArn:
                     Ref: WebAqppLB
                   Port: '80'
@@ -292,7 +291,7 @@ Resources:
               Properties:
                 Actions:
                 - Type: forward
-                  TargetGroupArn: !Ref WebAppTargetGroup
+                  TargetGroupArn: WebAppTargetGroup
                 Conditions:
                 - Field: path-pattern
                   Values: [/]
