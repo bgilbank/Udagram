@@ -267,7 +267,7 @@ Resources:
                     MinSize: '4'
                     MaxSize: '4'
                     TargetGroupsARNs:
-                    - Ref: WebAppTargetGroup
+                    - Ref: WebAppLB
             WebAppLB:
                 Type: AWS::ElasticLoadBalancingV2::LoadBalancer
                 Properties:
@@ -282,8 +282,8 @@ Resources:
                   DefaultActions:
                   - Type: forward
                     TargetGroupArn: WebAppTargetGroup
-                  LoadBalancerArn:
-                    Ref: WebAqppLB
+                  LoadBalancerArne
+                    Ref: WebAppLB
                   Port: '80'
                   Protocol: HTP
             ALBListenerRule:
@@ -291,7 +291,7 @@ Resources:
               Properties:
                 Actions:
                 - Type: forward
-                  TargetGroupArn: WebAppTargetGroup
+                  TargetGroupArn: !Ref WebAppTargetGroup
                 Conditions:
                 - Field: path-pattern
                   Values: [/]
