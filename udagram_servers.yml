@@ -4,12 +4,12 @@ Parameters:
     EnvironmentName:
         Description: An Environment name that will be prefixed to resources
         Type: String
-    
+
     VpcCIDR:
         Description: Please enter the IP range (CIDR notation) for this
         Type: String
         Default: 10.0.0.0/16
-    
+
     PublicSubnet1CIDR:
         Description: Please enter the IP range (CIDR notation) for this
         Type: String
@@ -28,7 +28,7 @@ Parameters:
     PrivateSubnet2CIDR:
         Description: Please enter the IP range (CIDR notation) for this
         Type: String
-        Default: 10.0.3.0/24 
+        Default: 10.0.3.0/24
 
 Resources:
     VPC:
@@ -39,7 +39,7 @@ Resources:
             Tags:
                 - Key: name
                   Value: !Ref EnvironmentName
- 
+
     InternetGateway:
         Type: AWS::EC2::InternetGateway
         Properties:
@@ -52,7 +52,7 @@ Resources:
         Properties:
             InternetGatewayId: !Ref InternetGateway
             VpcId: !Ref VPC
-    
+
     PublicSubnet1:
         Type: AWS::EC2::Subnet
         Properties:
@@ -63,7 +63,7 @@ Resources:
             Tags:
                 - Key: Name
                   Value: !Sub ${EnvironmentName} Public Subnet (AZ1)
-    
+
     PublicSubnet2:
         Type: AWS::EC2::Subnet
         Properties:
@@ -74,7 +74,7 @@ Resources:
             Tags:
                 - Key: Name
                   Value: !Sub ${EnvironmentName} Public Subnet (AZ2)
-    
+
     PrivateSubnet1:
         Type: AWS::EC2::Subnet
         Properties:
@@ -85,7 +85,7 @@ Resources:
             Tags:
                 - Key: Name
                   Value: !Sub ${EnvironmentName} Private Subnet (AZ1)
-    
+
     PrivateSubnet2:
         Type: AWS::EC2::Subnet
         Properties:
@@ -102,13 +102,13 @@ Resources:
         DependsOn: InternetGatewayAttachment
         Properties:
             Domain: vpc
-    
+
     NatGateway2EIP:
         Type: AWS::EC2::EIP
         DependsOn: InternetGatewayAttachment
         Properties:
             Domain: vpc
-    
+
     NatGateway1:
         Type: AWS::EC2::NatGateway
         Properties:
@@ -120,19 +120,19 @@ Resources:
         Properties:
             AllocationId: !GetAtt NatGateway2EIP.AllocationId
             SubnetId: !Ref PublicSubnet2
-    
+
     PublicRouteTable:
         Type: AWS::EC2::RouteTable
-        Properties: 
+        Properties:
             VpcId: !Ref VPC
-            Tags: 
-                - Key: Name 
+            Tags:
+                - Key: Name
                   Value: !Sub ${EnvironmentName} Public Routes
 
-    DefaultPublicRoute: 
+    DefaultPublicRoute:
         Type: AWS::EC2::Route
         DependsOn: InternetGatewayAttachment
-        Properties: 
+        Properties:
             RouteTableId: !Ref PublicRouteTable
             DestinationCidrBlock: 0.0.0.0/0
             GatewayId: !Ref InternetGateway
@@ -151,10 +151,10 @@ Resources:
 
     PrivateRouteTable1:
         Type: AWS::EC2::RouteTable
-        Properties: 
+        Properties:
             VpcId: !Ref VPC
-            Tags: 
-                - Key: Name 
+            Tags:
+                - Key: Name
                   Value: !Sub ${EnvironmentName} Private Routes (AZ1)
 
     DefaultPrivateRoute1:
@@ -172,10 +172,10 @@ Resources:
 
     PrivateRouteTable2:
         Type: AWS::EC2::RouteTable
-        Properties: 
+        Properties:
             VpcId: !Ref VPC
-            Tags: 
-                - Key: Name 
+            Tags:
+                - Key: Name
                   Value: !Sub ${EnvironmentName} Private Routes (AZ2)
 
     DefaultPrivateRoute2:
@@ -190,7 +190,7 @@ Resources:
         Properties:
             RouteTableId: !Ref PrivateRouteTable2
             SubnetId: !Ref PrivateSubnet2
-    
+
     LBSecGroup:
         Type: AWS::EC2::SecurityGroup
         Properties:
@@ -206,10 +206,10 @@ Resources:
               FromPort: 80
               ToPort: 80
               CidrIp: 0.0.0.0/0
-    
+
     WebServerSecGroup:
         Type: AWS::EC2::SecurityGroup
-        Properties: 
+        Properties:
             GroupDescription: Allow http to our hosts and SSH locally only
             VpcId: !Ref VPC
             SecurityGroupIngress:
@@ -226,18 +226,16 @@ Resources:
               FromPort: 0
               ToPort: 65535
               CidrIp: 0.0.0.0/0
-    
+
     WebAppLaunchConfig:
         Type: AWS::AutoScaling::LaunchConfiguration
         Properties:
-            UserData: 
+            UserData:
                 Fn::Base64: !Sub |
                     #!/bin/bash
                     exec > >(tee /var/log/user-data.log|logger -t user-data -s 2>/dev/console) 2>&1
-                    yum update -y
-                    yum install -y httpd
-                    systemctl start httpd
-                    systemctl enable httpd
+                    sudo apt-get update
+                    sudo apt-get install apache2
                     wget -P ../../var/www/html https://udagram.s3-us-west-2.amazonaws.com/index.html
 
             ImageId: ami-07b4f3c02c7f83d59
@@ -249,9 +247,9 @@ Resources:
             - DeviceName: "/dev/sdk"
               Ebs:
                 VolumeSize: '10'
-    WebAutoScalingGroup: 
+    WebAutoScalingGroup:
         Type: AWS::AutoScaling::AutoScalingGroup
-        Properties: 
+        Properties:
             VPCZoneIdentifier:
                 - !Ref PrivateSubnet1
                 - !Ref PrivateSubnet2
@@ -263,13 +261,13 @@ Resources:
 
     ElasticLoadBalancer:
         Type: AWS::ElasticLoadBalancingV2::LoadBalancer
-        Properties: 
+        Properties:
             IpAddressType: ipv4
             Name: ElasticLoadBalancer
             Scheme: internet-facing
-            SecurityGroups: 
+            SecurityGroups:
                 - Ref: LBSecGroup
-            Subnets: 
+            Subnets:
                 - !Ref PublicSubnet1
                 - !Ref PublicSubnet2
             Type: application
@@ -301,6 +299,3 @@ Resources:
                   Values: [/]
             ListenerArn: !Ref Listener
             Priority: 1
-
-    
-
