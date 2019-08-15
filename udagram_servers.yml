@@ -218,8 +218,8 @@ Resources:
               ToPort: 80
               CidrIp: 0.0.0.0/0
             - IpProtocol: tcp
-              FromPort: 22
-              ToPort: 22
+              FromPort: 80
+              ToPort: 80
               CidrIp: 0.0.0.0/0
             SecurityGroupEgress:
             - IpProtocol: tcp
@@ -239,7 +239,6 @@ Resources:
                     wget -P ../../var/www/html https://udagram.s3-us-west-2.amazonaws.com/index.html
 
             ImageId: ami-07b4f3c02c7f83d59
-            KeyName: bg
             SecurityGroups:
             - Ref: WebServerSecGroup
             InstanceType: t2.medium
